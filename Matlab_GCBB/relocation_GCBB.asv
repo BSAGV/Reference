@@ -1,0 +1,67 @@
+function H = relocation_GCBB (features, observations)
+%-------------------------------------------------------
+% University of Zaragoza
+% Centro Politecnico Superior
+% Robotics and Real Time Group
+% Authors:  J. Neira, J. Tardos
+% Date   :  7-2002
+%-------------------------------------------------------
+% function H = relocation_GCBB (features, observations)
+%
+% obtain the pairing hypotesis between observations and
+% features, according to the Geometric Constraints
+% Branch and Bound algorithm.
+%-------------------------------------------------------
+
+% will hold the Best hypothesis according to GCBB
+global Best;
+Best=zeros(1, observations.m);
+
+gcbb (features, observations, [], 1);
+% silly answer
+H = Best;
+return
+
+function gcbb (features, observations, H, i)
+global Best;
+global configuration;
+if i > observations.m % leaf node?
+    if pairings(H) > pairings(Best) % did better?
+         % if jointly_compatible(prediction, observations, [H ])
+              Best = H;
+         % end
+    end
+else
+    %individually_compatible = find(compatibility.ic(i,:));
+    count=covisible(H,features);
+    for j = count
+        if   binary(H,i, j,features,observations) % & unary(i, j,features,observations) 
+            gcbb(features, observations, [H j], i + 1); %pairing (Ei, Fj) accepted 
+        end
+    end
+    if pairings(H) +  observations.m-1 > pairings(Best) % can do better?
+       gcbb(features, observations, [H 0], i + 1); % star node: Ei not paired
+    end
+end
+
+
+
+%-------------------------------------------------------
+function p = pairings(H)
+% 
+%-------------------------------------------------------
+p = nnz(H);
+
+function  p= covisible(H,features)
+[m n]=size(H);
+temp=features.covisibility(H,:);
+zero=zeros(1;)
+temp=[temp;zero];
+add=sum(temp(:));
+ p=find(add==n);
+
+
+
+
+
+
